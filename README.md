@@ -120,7 +120,7 @@ services:
 ```
 *Note: if you need to run FoundryVTT on a different port, change the published port to the desired port. No need to change the target port. The `target` is the port inside the container, the `published` is the publicly exposed port.*
 
-8. Now you should be able to start the container and see FoundryVTT running at http://localhost:30000 and at http://your.hostname.com:
+8. Now you should be able to start the container and see FoundryVTT running at `http://localhost:30000` and at `http://your.hostname.com`:
 ```
 docker-compose up -d
 ```
