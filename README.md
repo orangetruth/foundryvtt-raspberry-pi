@@ -92,7 +92,7 @@ sudo service nginx stop
 # Restart Nginx
 sudo service nginx restart
 ```
-7. Next, create a docker-compose file to run foundryvtt-docker: `nano $HOME/docker-compose.yml`. See the [foundryvtt-docker](https://github.com/felddy/foundryvtt-docker) for instructions on using secrets, a temporary foundryvtt download url, and other options. Make sure to replace `YOUR_FOUNDRY_LICENSE` and `YOUR_ADMIN_KEY` before saving the file.
+7. Next, create a docker-compose file to run foundryvtt-docker: `nano $HOME/docker-compose.yml`. See the [foundryvtt-docker](https://github.com/felddy/foundryvtt-docker) for instructions on using secrets, a temporary foundryvtt download url, and other options. Make sure to replace `YOUR_FOUNDRY_LICENSE`, `YOUR_ADMIN_KEY`, `YOUR_FOUNDRY_USERNAME`, and `YOUR_FOUNDRY_PASSWORD` before saving the file.
 ```
 version: "3.3"
 
@@ -109,6 +109,8 @@ services:
         target: /data
     environment:
       - CONTAINER_CACHE=/data/container_cache
+      - FOUNDRY_USERNAME=YOUR_FOUNDRY_USERNAME
+      - FOUNDRY_PASSWORD=YOUR_FOUNDRY_PASSWORD
       - FOUNDRY_LICENSE_KEY=YOUR_FOUNDRY_LICENSE
       - FOUNDRY_ADMIN_KEY=YOUR_ADMIN_KEY
     ports:
