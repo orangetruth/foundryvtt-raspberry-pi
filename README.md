@@ -35,11 +35,9 @@ mkdir foundrydata
 sudo apt-get update
 sudo apt-get install nginx
 ```
-5. Create an Nginx configuration file for your domain. Make sure to update the references to `your.hostname.com` in the configuration file: `sudo nano /etc/nginx/sites-available/your.hostname.com`
+5. Create an Nginx configuration file for your domain. Make sure to update the references to `your.hostname.com` in the configuration file: `sudo nano /etc/nginx/sites-available/your.hostname.com` and make sure the proxy_pass port number matches the published port in your docker-compose file.
 ```
-# This goes in a file within /etc/nginx/sites-available/. By convention,
-# the filename would be either "your.domain.com" or "foundryvtt", but it
-# really does not matter as long as it's unique and descriptive for you.
+# the filename should be "your.hostname.com"
 
 # Define Server
 server {
@@ -66,6 +64,7 @@ server {
         proxy_set_header Connection "Upgrade";
 
         # Make sure to set your Foundry VTT port number
+	# This should match the published port in your docker-compose file
         proxy_pass http://localhost:30000;
     }
 }
@@ -127,9 +126,9 @@ docker-compose up -d
 Check that your container is running using `docker container ls`, view the container logs using `docker logs foundry`. If needed you can stop the container `docker stop foundry`, remove it `docker rm foundry`, and run it again after making any necessary changes to your docker compose file `docker-compose up -d`. Alternately, `docker-compose down` will stop all containers and removes containers, networks, volumes, and images created by the previous `docker-compose up` in a single command.
 
 9. Now it's time to setup HTTPS for your domain. Create SSL certificates using Certbot. Follow the instructions [here](https://certbot.eff.org/lets-encrypt/debianbuster-nginx).
-10. Update the nginx config file to use port 443 and the SSL certificates you created. Again, make sure to replace `your.hostname.com`: `sudo nano /etc/nginx/sites-available/your.hostname.com`
+10. Update the nginx config file to use port 443 and the SSL certificates you created. Again, make sure to replace `your.hostname.com`: `sudo nano /etc/nginx/sites-available/your.hostname.com` and make sure the proxy_pass port number matches the published port in your docker-compose file.
 ```
-# the filename needs to be "your.hostname.com"
+# the filename should be "your.hostname.com"
 
 # Define Server
 server {
@@ -158,6 +157,7 @@ server {
         proxy_set_header Connection "Upgrade";
 
         # Make sure to set your Foundry VTT port number
+	# This should match the published port in your docker-compose file
         proxy_pass http://localhost:30000;
     }
 }
