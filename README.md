@@ -184,7 +184,12 @@ Now your site should be accessible at `https://your.hostname.com`!
 ## Enable Audio/Video Chat with Jitsi
 1. Log on to the admin page of your foundryvtt instance, go to Add-on Modules and install JitsiWebRTC:
 ![Screen Shot 2020-11-25 at 7 30 21 PM](https://user-images.githubusercontent.com/33645693/100301155-cbed0a80-2f54-11eb-810b-8fd8033401b7.png)
-2. Launch your world, join game session as GM and go to Game Settings -> Configure Settings -> click on Configure Audio/Video -> change Audio/Video Conferenceing Mode to Audio/Video Enabled:
+
+2. Launch your world, join the game session as GM, go to Game Settings -> Manage Modules, enable Jitsi Web RTC client and then Save Module Settings
+
+![](https://i.imgur.com/Drb3eGc.png)
+
+3. Once your world reloads, go to Game Settings -> Configure Settings -> click on Configure Audio/Video -> change Audio/Video Conferencing Mode to Audio/Video Enabled
 
 ![Screen Shot 2020-11-25 at 7 32 54 PM](https://user-images.githubusercontent.com/33645693/100301376-43229e80-2f55-11eb-9e02-4920849df002.png)
 
@@ -192,7 +197,7 @@ Now your site should be accessible at `https://your.hostname.com`!
 
 *Note: you don't need to setup your own Jitsi server*
 
-3. Save changes and once the page reloads, you should get a popup in Chrome to enable your site to use your microphone and camera! That's it!
+4. Save changes and once the page reloads, you should get a popup in your browser to enable your site to use your microphone and camera. That's it!
 
 ## Sync your pi with Google Drive for automatic backups
 Be aware that you shouldn't have your foundry instance referencing data in a cloud sync/backup service as it could cause data corruption. What you can do is create a tar archive of your foundry data, compress it with gzip and move it to your cloud sync/backup folder on a regular basis.
