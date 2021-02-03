@@ -1,7 +1,7 @@
 # How to run FoundryVTT on a Raspberry Pi 4 using nginx and foundryvtt-docker
 
 ## Prerequisites:
-* External SSD with USB 3.0 cable
+* External SSD with USB 3.0 cable (I used this [120 GB SSD](https://www.amazon.com/dp/B073TTR8JY/ref=dp_iou_view_product?ie=UTF8&psc=1) which was $17 and [this case](https://www.amazon.com/gp/product/B00OJ3UJ2S/ref=ppx_od_dt_b_asin_title_s00?ie=UTF8&psc=1) for $9)
 * Raspberry Pi 4
 
 ## Format SSD so you can boot from it
