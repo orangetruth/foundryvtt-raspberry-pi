@@ -243,13 +243,13 @@ BACKUP_FOLDER='/home/pi/backups/'
 BACKUP_CMD='/bin/tar -rvf'
 
 counter=1
-while [ $counter -le 3 ]
+while [ $counter -le 4 ]
 do
 	SECONDS=0
 	NOW=`date '+%F_%H%M'`	
 	DEST_FILE="foundrydata$counter-backup-$NOW.tar"
 	DEST_FOLDER="/home/pi/mnt/gdrive/foundrydata$counter/"
-	rclone delete --min-age 4d $DEST_FOLDER 
+	rclone delete --min-age 56d $DEST_FOLDER 
 	$BACKUP_CMD $BACKUP_FOLDER/$DEST_FILE -P /home/pi/foundrydata$counter
 	echo compressing..
 	/bin/gzip $BACKUP_FOLDER/$DEST_FILE
@@ -261,6 +261,116 @@ done
 echo all backups complete
 ```
 
-c. You can use [Crontab Generator](https://crontab-generator.org/) to find the syntax for whatever backup schedule you want in crontab. I used this to run backups every day at 2 am and output the log to a log file with the date:
+c. You can use [Crontab Generator](https://crontab-generator.org/) to find the syntax for whatever backup schedule you want in crontab. I used this to run backups each Wednesday at 2 am and output the log to a log file with the date (and the backup script above deletes backups after 8 weeks):
 
-    0 2 * * * ~/bin/backup.sh > ~/backups/backup__`date +\%y\%m\%d`.log
+    0 2 * * 3 ~/bin/backup.sh > ~/backups/backup__`date +\%y\%m\%d`.log
+
+## Run multiple FoundryVTT instances
+If you have multiple FoundryVTT licenses, it's easy to modify the docker-compose file to spin up multiple foundry instances and have each instance be accessible from its own URL. 
+You'll need to:
+1. Create a directory for the application data.
+```
+cd $HOME
+mkdir foundrydata2
+```
+2. Create another subdomain on www.duckdns.org
+3. From Setup Step 5 above, follow the same process again but for your new URL. Create the Nginx config file.
+4. Add the additional service to your existing docker-compose file (rather than creating another docker-compose file) and start it up to ensure it’s setup correctly. Here I have it setup for 3 foundry instances:
+```
+---
+version: "3.3"
+
+services:
+  foundry_1:
+    container_name: foundry1
+    image: felddy/foundryvtt:release
+    hostname: my_foundry_host_1
+    restart: "unless-stopped"
+    network_mode: webproxy
+    volumes:
+      - type: bind
+        source: ./foundrydata1
+        target: /data
+    environment:
+      - FOUNDRY_USERNAME=YOUR_USERNAME
+      - FOUNDRY_PASSWORD=YOUR_PASSWORD
+      - CONTAINER_CACHE=/data/container_cache
+      - FOUNDRY_LICENSE_KEY=YOUR_LICENSE_KEY
+      - VIRTUAL_HOST=KEY=YOUR_URL.duckdns.org
+      - FOUNDRY_ADMIN_KEY=YOUR_ADMIN_KEY
+    ports:
+      - target: "30000"
+        published: "30000"
+        protocol: tcp
+  foundry_2:
+    container_name: foundry2
+    image: felddy/foundryvtt:release
+    hostname: my_foundry_host_2
+    restart: "unless-stopped"
+    network_mode: webproxy
+    volumes:
+      - type: bind
+        source: ./foundrydata2
+        target: /data
+      - '/home/pi/foundrydata1/Data/maps/:/home/pi/foundrydata1/Data/maps/'
+      - '/home/pi/foundrydata1/Data/modules/:/home/pi/foundrydata1/Data/modules/'
+      - '/home/pi/foundrydata1/Data/systems/:/home/pi/foundrydata1/Data/systems/'
+      - '/home/pi/foundrydata1/Data/audio/:/home/pi/foundrydata1/Data/audio/'
+      - '/home/pi/foundrydata1/Data/tokens/:/home/pi/foundrydata1/Data/tokens/'
+      - '/home/pi/foundrydata1/Data/dndbeyond/:/home/pi/foundrydata1/Data/dndbeyond/'
+      - '/home/pi/foundrydata1/Data/dragupload/:/home/pi/foundrydata1/Data/dragupload/'
+      - '/home/pi/foundrydata1/Data/uploaded-chat-images/:/home/pi/foundrydata1/Data/uploaded-chat-images/'
+    environment:
+      - FOUNDRY_USERNAME=YOUR_USERNAME
+      - FOUNDRY_PASSWORD=YOUR_PASSWORD
+      - CONTAINER_CACHE=/data/container_cache
+      - FOUNDRY_LICENSE_KEY=YOUR_LICENSE_KEY
+      - VIRTUAL_HOST=KEY=YOUR_URL.duckdns.org
+      - FOUNDRY_ADMIN_KEY=YOUR_ADMIN_KEY
+    ports:
+      - target: "30000"
+        published: "30001"
+        protocol: tcp
+  foundry_3:
+    container_name: foundry3
+    image: felddy/foundryvtt:release
+    hostname: my_foundry_host_2
+    restart: "unless-stopped"
+    network_mode: webproxy
+    volumes:
+      - type: bind
+        source: ./foundrydata3
+        target: /data
+      - '/home/pi/foundrydata1/Data/maps/:/home/pi/foundrydata1/Data/maps/'
+      - '/home/pi/foundrydata1/Data/modules/:/home/pi/foundrydata1/Data/modules/'
+      - '/home/pi/foundrydata1/Data/systems/:/home/pi/foundrydata1/Data/systems/'
+      - '/home/pi/foundrydata1/Data/audio/:/home/pi/foundrydata1/Data/audio/'
+      - '/home/pi/foundrydata1/Data/tokens/:/home/pi/foundrydata1/Data/tokens/'
+      - '/home/pi/foundrydata1/Data/dndbeyond/:/home/pi/foundrydata1/Data/dndbeyond/'
+      - '/home/pi/foundrydata1/Data/dragupload/:/home/pi/foundrydata1/Data/dragupload/'
+      - '/home/pi/foundrydata1/Data/uploaded-chat-images/:/home/pi/foundrydata1/Data/uploaded-chat-images/'
+    environment:
+      - FOUNDRY_USERNAME=YOUR_USERNAME
+      - FOUNDRY_PASSWORD=YOUR_PASSWORD
+      - CONTAINER_CACHE=/data/container_cache
+      - FOUNDRY_LICENSE_KEY=YOUR_LICENSE_KEY
+      - VIRTUAL_HOST=KEY=YOUR_URL.duckdns.org
+      - FOUNDRY_ADMIN_KEY=YOUR_ADMIN_KEY
+    ports:
+      - target: "30000"
+        published: "30002"
+        protocol: tcp
+```
+Some things to note:
+- Make sure to replace `YOUR_USERNAME`, `YOUR_PASSWORD`, `YOUR_LICENSE_KEY`, `YOUR_URL.duckdns.org`, and `YOUR_ADMIN_KEY` for each service.
+- Each new Foundry instance will need its own published port number (but the target port will always be 30000)
+- Foundry supports symbolic links (aka symlinks) as of [v0.5.0](https://foundryvtt.com/releases/0.5.0): "The software can now support symbolic links inside the user data location which can point to art assets, module, systems, or worlds which are stored in other locations." I've added symlinks so that all foundry instances share a bunch of folders, including modules and systems, with the foundrydata1 folder. That way I don't have to backup, maintain and update duplicate modules, worlds, and other assets. In addition to including each volume in the volumes section of the docker-compose file, you'll need to run the command `ln -s /home/pi/foundrydata1/Data/modules /home/pi/foundrydata2/Data/modules` for each folder you want to link. This command creates a link to `/home/pi/foundrydata1/Data/modules` in `/home/pi/foundrydata2/Data/`. For example, if you wanted to have the modules and systems shared between all instances, you'd need to run these commands:
+```
+ln -s /home/pi/foundrydata1/Data/modules /home/pi/foundrydata2/Data/modules
+ln -s /home/pi/foundrydata1/Data/modules /home/pi/foundrydata3/Data/modules
+ln -s /home/pi/foundrydata1/Data/systems /home/pi/foundrydata2/Data/systems
+ln -s /home/pi/foundrydata1/Data/systems /home/pi/foundrydata3/Data/systems
+```
+4. Setup HTTPS using Certbot and Nginx per Setup Steps 9 and 10 above.
+
+
