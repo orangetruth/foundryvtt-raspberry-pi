@@ -10,6 +10,8 @@
 
 2. Once the install finishes, unplug the SSD, remove the SD card from your raspberry pi (if it has one), plug in the SSD, and boot it up from the SSD.
 
+	Note: if you have trouble getting your Raspberry Pi 4 to boot from one of the blue USB 3.0 ports, boot it from a black USB 2.0 port, then run `sudo nano /boot/cmdline.txt` and add the following to the beginning of the line in /boot/cmdline.txt: `usb-storage.quirks=152d:0578:u  `
+
 ## Install Docker
 1. Follow the steps [here](https://docs.docker.com/engine/install/debian/#install-using-the-convenience-script) to install Docker using the convenience script.
 
