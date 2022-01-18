@@ -9,6 +9,25 @@
 <img width="674" alt="Screen Shot 2020-11-17 at 10 05 03 PM" src="https://user-images.githubusercontent.com/33645693/99486155-f588af00-2920-11eb-805d-facb578fdabe.png">
 
 2. Once the install finishes, unplug the SSD, remove the SD card from your raspberry pi (if it has one), plug in the SSD, and boot it up from the SSD.
+
+## Install Docker
+1. Follow the steps [here](https://docs.docker.com/engine/install/debian/#install-using-the-convenience-script) to install Docker using the convenience script.
+
+2. Add a Non-Root User to the Docker Group
+
+	By default, only users who have administrative privileges (root users) can run containers. If you are not logged in as the root, one option is to use the sudo prefix. However, you could also add your non-root user to the Docker group which will allow it to execute docker commands. The syntax for adding users to the Docker group is:
+	
+	```
+	sudo usermod -aG docker [user_name]
+	```
+
+	To add the Pi user (the default user in Raspbian), use the command:
+
+	```
+	sudo usermod -aG docker Pi
+	```
+
+	You can check the version of Docker using `docker version`. For system-wide information (including the kernel version, number of containers and images, and more extended description) run `docker info`.
   
 ## Setup Steps
 Basically just follow the steps as indicated on the FoundryVTT [installation](https://foundryvtt.com/article/installation/) instructions for Node.js, [Nginx](https://foundryvtt.com/article/nginx/), and [foundryvtt-docker](https://github.com/felddy/foundryvtt-docker). You can get 5 free subdomains from [DuckDNS](http://www.duckdns.org/).
@@ -20,161 +39,161 @@ Basically just follow the steps as indicated on the FoundryVTT [installation](ht
 Then go [here](https://www.duckdns.org/install.jsp?tab=pi) and follow the installation instructions.
 
 2. Install Node.js
-```
-sudo apt install -y libssl-dev
-curl -sL https://deb.nodesource.com/setup_12.x | sudo bash -
-sudo apt install -y nodejs
-```
+	```
+	sudo apt install -y libssl-dev
+	curl -sL https://deb.nodesource.com/setup_12.x | sudo bash -
+	sudo apt install -y nodejs
+	```
 3. Create a directory for the application data
-```
-cd $HOME
-mkdir foundrydata
-```
+	```
+	cd $HOME
+	mkdir foundrydata
+	```
 4. Install nginx: 
-```
-sudo apt-get update
-sudo apt-get install nginx
-```
+	```
+	sudo apt-get update
+	sudo apt-get install nginx
+	```
 5. Create an Nginx configuration file for your domain. Make sure to update the references to `your.hostname.com` in the configuration file: `sudo nano /etc/nginx/sites-available/your.hostname.com` and make sure the proxy_pass port number matches the published port in your docker-compose file.
-```
-# the filename should be "your.hostname.com"
+	```
+	# the filename should be "your.hostname.com"
 
-# Define Server
-server {
+	# Define Server
+	server {
 
-    # Enter your fully qualified domain name or leave blank
-    server_name             your.hostname.com;
+	    # Enter your fully qualified domain name or leave blank
+	    server_name             your.hostname.com;
 
-    # Listen on port 80 without SSL certificates
-    listen                  80;
+	    # Listen on port 80 without SSL certificates
+	    listen                  80;
 
-    # Sets the Max Upload size to 300 MB
-    client_max_body_size 300M;
+	    # Sets the Max Upload size to 300 MB
+	    client_max_body_size 300M;
 
-    # Proxy Requests to Foundry VTT
-    location / {
+	    # Proxy Requests to Foundry VTT
+	    location / {
 
-        # Set proxy headers
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+		# Set proxy headers
+		proxy_set_header Host $host;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
 
-        # These are important to support WebSockets
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "Upgrade";
+		# These are important to support WebSockets
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection "Upgrade";
 
-        # Make sure to set your Foundry VTT port number
-	# This should match the published port in your docker-compose file
-        proxy_pass http://localhost:30000;
-    }
-}
-```
+		# Make sure to set your Foundry VTT port number
+		# This should match the published port in your docker-compose file
+		proxy_pass http://localhost:30000;
+	    }
+	}
+	```
 Save and exit nano with ctrl + x, press Y, then Enter
 
 6. Use the `service` utility to manage your Nginx server. Enable the site, test your configuration, fix any errors, and start the service. Don't forget to replace `your.hostname.com`!
-```
-# Enable new site
-sudo ln -s /etc/nginx/sites-available/your.hostname.com /etc/nginx/sites-enabled/
+	```
+	# Enable new site
+	sudo ln -s /etc/nginx/sites-available/your.hostname.com /etc/nginx/sites-enabled/
 
-# Test your configuration file
-sudo service nginx configtest
+	# Test your configuration file
+	sudo service nginx configtest
 
-# View configuration errors (if the configtest was not OK)
-sudo nginx -t
+	# View configuration errors (if the configtest was not OK)
+	sudo nginx -t
 
-# Start Nginx
-sudo service nginx start
+	# Start Nginx
+	sudo service nginx start
 
-# Stop Nginx
-sudo service nginx stop
+	# Stop Nginx
+	sudo service nginx stop
 
-# Restart Nginx
-sudo service nginx restart
-```
+	# Restart Nginx
+	sudo service nginx restart
+	```
 7. Next, create a docker-compose file to run foundryvtt-docker: `nano $HOME/docker-compose.yml`. See the [foundryvtt-docker](https://github.com/felddy/foundryvtt-docker) for instructions on using secrets, a temporary foundryvtt download url, and other options. Make sure to replace `YOUR_FOUNDRY_LICENSE`, `YOUR_ADMIN_KEY`, `YOUR_FOUNDRY_USERNAME`, and `YOUR_FOUNDRY_PASSWORD` before saving the file.
-```
-version: "3.3"
+	```
+	version: "3.3"
 
-services:
-  foundry_1:
-    container_name: foundry
-    image: felddy/foundryvtt:release
-    hostname: my_foundry_host_1
-    restart: "unless-stopped"
-    network_mode: webproxy
-    volumes:
-      - type: bind
-        source: ./foundrydata
-        target: /data
-    environment:
-      - CONTAINER_CACHE=/data/container_cache
-      - FOUNDRY_USERNAME=YOUR_FOUNDRY_USERNAME
-      - FOUNDRY_PASSWORD=YOUR_FOUNDRY_PASSWORD
-      - FOUNDRY_LICENSE_KEY=YOUR_FOUNDRY_LICENSE
-      - FOUNDRY_ADMIN_KEY=YOUR_ADMIN_KEY
-    ports:
-      - target: "30000"
-        published: "30000"
-        protocol: tcp
-```
+	services:
+	  foundry_1:
+	    container_name: foundry
+	    image: felddy/foundryvtt:release
+	    hostname: my_foundry_host_1
+	    restart: "unless-stopped"
+	    network_mode: webproxy
+	    volumes:
+	      - type: bind
+		source: ./foundrydata
+		target: /data
+	    environment:
+	      - CONTAINER_CACHE=/data/container_cache
+	      - FOUNDRY_USERNAME=YOUR_FOUNDRY_USERNAME
+	      - FOUNDRY_PASSWORD=YOUR_FOUNDRY_PASSWORD
+	      - FOUNDRY_LICENSE_KEY=YOUR_FOUNDRY_LICENSE
+	      - FOUNDRY_ADMIN_KEY=YOUR_ADMIN_KEY
+	    ports:
+	      - target: "30000"
+		published: "30000"
+		protocol: tcp
+	```
 *Note: if you need to run FoundryVTT on a different port, change the published port to the desired port. No need to change the target port. The `target` is the port inside the container, the `published` is the publicly exposed port.*
 
 8. Now you should be able to start the container and see FoundryVTT running at `http://localhost:30000` and at `http://your.hostname.com`:
-```
-docker-compose up -d
-```
+	```
+	docker-compose up -d
+	```
 Check that your container is running using `docker container ls`, view the container logs using `docker logs foundry`. If needed you can stop the container `docker stop foundry`, remove it `docker rm foundry`, and run it again after making any necessary changes to your docker compose file `docker-compose up -d`. Alternately, `docker-compose down` will stop all containers and removes containers, networks, volumes, and images created by the previous `docker-compose up` in a single command.
 
 9. Now it's time to setup HTTPS for your domain. Create SSL certificates using Certbot. Follow the instructions [here](https://certbot.eff.org/lets-encrypt/debianbuster-nginx).
 10. Update the nginx config file to use port 443 and the SSL certificates you created. Again, make sure to replace `your.hostname.com`: `sudo nano /etc/nginx/sites-available/your.hostname.com` and make sure the proxy_pass port number matches the published port in your docker-compose file.
-```
-# the filename should be "your.hostname.com"
+	```
+	# the filename should be "your.hostname.com"
 
-# Define Server
-server {
+	# Define Server
+	server {
 
-    # Enter your fully qualified domain name or leave blank
-    server_name             your.hostname.com;
+	    # Enter your fully qualified domain name or leave blank
+	    server_name             your.hostname.com;
 
-    # Listen on port 443 using SSL certificates
-    listen                  443 ssl;
-    ssl_certificate         "/etc/letsencrypt/live/your.hostname.com/fullchain.pem";
-    ssl_certificate_key     "/etc/letsencrypt/live/your.hostname.com/privkey.pem";
+	    # Listen on port 443 using SSL certificates
+	    listen                  443 ssl;
+	    ssl_certificate         "/etc/letsencrypt/live/your.hostname.com/fullchain.pem";
+	    ssl_certificate_key     "/etc/letsencrypt/live/your.hostname.com/privkey.pem";
 
-    # Sets the Max Upload size to 300 MB
-    client_max_body_size 300M;
+	    # Sets the Max Upload size to 300 MB
+	    client_max_body_size 300M;
 
-    # Proxy Requests to Foundry VTT
-    location / {
+	    # Proxy Requests to Foundry VTT
+	    location / {
 
-        # Set proxy headers
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+		# Set proxy headers
+		proxy_set_header Host $host;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
 
-        # These are important to support WebSockets
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "Upgrade";
+		# These are important to support WebSockets
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection "Upgrade";
 
-        # Make sure to set your Foundry VTT port number
-	# This should match the published port in your docker-compose file
-        proxy_pass http://localhost:30000;
-    }
-}
+		# Make sure to set your Foundry VTT port number
+		# This should match the published port in your docker-compose file
+		proxy_pass http://localhost:30000;
+	    }
+	}
 
-# Optional, but recommend. Redirects all HTTP requests to HTTPS for you
-server {
-    if ($host = your.hostname.com) {
-        return 301 https://$host$request_uri;
-    }
+	# Optional, but recommend. Redirects all HTTP requests to HTTPS for you
+	server {
+	    if ($host = your.hostname.com) {
+		return 301 https://$host$request_uri;
+	    }
 
-    listen 80;
-	listen [::]:80;
+	    listen 80;
+		listen [::]:80;
 
-    server_name your.hostname.com;
-    return 404;
-}
-```
+	    server_name your.hostname.com;
+	    return 404;
+	}
+	```
 Save and exit nano with ctrl + x, press Y, then Enter
 
 11. Don't forget to setup Port Forwarding on your router. You'll need to forward ports 80 and 443 to your raspberry pi. Every router is different, but you can find specific instructions [here](https://portforward.com/).
@@ -187,13 +206,13 @@ Now your site should be accessible at `https://your.hostname.com`!
 
 2. Launch your world, join the game session as GM, go to Game Settings -> Manage Modules, enable Jitsi Web RTC client and then Save Module Settings
 
-![](https://i.imgur.com/Drb3eGc.png)
+	![](https://i.imgur.com/Drb3eGc.png)
 
 3. Once your world reloads, go to Game Settings -> Configure Settings -> click on Configure Audio/Video -> change Audio/Video Conferencing Mode to Audio/Video Enabled
 
-![Screen Shot 2020-11-25 at 7 32 54 PM](https://user-images.githubusercontent.com/33645693/100301376-43229e80-2f55-11eb-9e02-4920849df002.png)
+	![Screen Shot 2020-11-25 at 7 32 54 PM](https://user-images.githubusercontent.com/33645693/100301376-43229e80-2f55-11eb-9e02-4920849df002.png)
 
-![Screen Shot 2020-11-25 at 7 34 28 PM](https://user-images.githubusercontent.com/33645693/100301382-44ec6200-2f55-11eb-8be4-b5e70858d652.png)
+	![Screen Shot 2020-11-25 at 7 34 28 PM](https://user-images.githubusercontent.com/33645693/100301382-44ec6200-2f55-11eb-8be4-b5e70858d652.png)
 
 *Note: you don't need to setup your own Jitsi server*
 
@@ -365,12 +384,12 @@ Some things to note:
 - Make sure to replace `YOUR_USERNAME`, `YOUR_PASSWORD`, `YOUR_LICENSE_KEY`, `YOUR_URL.duckdns.org`, and `YOUR_ADMIN_KEY` for each service.
 - Each new Foundry instance will need its own published port number (but the target port will always be 30000)
 - Foundry supports symbolic links (aka symlinks) as of [v0.5.0](https://foundryvtt.com/releases/0.5.0): "The software can now support symbolic links inside the user data location which can point to art assets, module, systems, or worlds which are stored in other locations." I've added symlinks so that all foundry instances share a bunch of folders, including modules and systems, with the foundrydata1 folder. That way I don't have to backup, maintain and update duplicate modules, worlds, and other assets. In addition to including each volume in the volumes section of the docker-compose file, you'll need to run the command `ln -s /home/pi/foundrydata1/Data/modules /home/pi/foundrydata2/Data/modules` for each folder you want to link. This command creates a link to `/home/pi/foundrydata1/Data/modules` in `/home/pi/foundrydata2/Data/`. For example, if you wanted to have the modules and systems shared between all instances, you'd need to run these commands:
-```
-ln -s /home/pi/foundrydata1/Data/modules /home/pi/foundrydata2/Data/modules
-ln -s /home/pi/foundrydata1/Data/modules /home/pi/foundrydata3/Data/modules
-ln -s /home/pi/foundrydata1/Data/systems /home/pi/foundrydata2/Data/systems
-ln -s /home/pi/foundrydata1/Data/systems /home/pi/foundrydata3/Data/systems
-```
+	```
+	ln -s /home/pi/foundrydata1/Data/modules /home/pi/foundrydata2/Data/modules
+	ln -s /home/pi/foundrydata1/Data/modules /home/pi/foundrydata3/Data/modules
+	ln -s /home/pi/foundrydata1/Data/systems /home/pi/foundrydata2/Data/systems
+	ln -s /home/pi/foundrydata1/Data/systems /home/pi/foundrydata3/Data/systems
+	```
 4. Setup HTTPS using Certbot and Nginx per Setup Steps 9 and 10 above.
 
 
