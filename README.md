@@ -12,6 +12,15 @@
 
 	Note: if you have trouble getting your Raspberry Pi 4 to boot from one of the blue USB 3.0 ports, boot it from a black USB 2.0 port, then run `sudo nano /boot/cmdline.txt` and add the following to the beginning of the line in /boot/cmdline.txt: `usb-storage.quirks=152d:0578:u  `
 
+## Setup SSH
+Follow the instructions [here](https://www.raspberrypi.com/documentation/computers/remote-access.html) to setup ssh, including passwordless ssh access.
+
+## Setup AFP (if on a mac)
+Follow [this guide](https://pimylifeup.com/raspberry-pi-afp/) to setup an AFP server so you can access your Pi's files remotely.
+
+## Setup PiTunnel
+[PiTunnel](https://pitunnel.com/) makes it easy to ssh into your raspberry pi when you're outside of your local network.
+
 ## Install Docker
 1. Follow the steps [here](https://docs.docker.com/engine/install/debian/#install-using-the-convenience-script) to install Docker using the convenience script.
 
