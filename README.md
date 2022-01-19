@@ -24,7 +24,9 @@ Follow [this guide](https://pimylifeup.com/raspberry-pi-afp/) to setup an AFP se
 ## Install Docker
 1. Follow the steps [here](https://docs.docker.com/engine/install/debian/#install-using-the-convenience-script) to install Docker using the convenience script.
 
-2. Add a Non-Root User to the Docker Group
+2. Install docker-compose using `sudo apt install docker-compose`.
+
+3. Add a Non-Root User to the Docker Group
 
 	By default, only users who have administrative privileges (root users) can run containers. If you are not logged in as the root, one option is to use the sudo prefix. However, you could also add your non-root user to the Docker group which will allow it to execute docker commands. The syntax for adding users to the Docker group is:
 	
