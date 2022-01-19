@@ -23,11 +23,9 @@ Follow [this guide](https://pimylifeup.com/raspberry-pi-afp/) to setup an AFP se
 
 ## Install Docker
 1. Follow the steps [here](https://docs.docker.com/engine/install/debian/#install-using-the-convenience-script) to install Docker using the convenience script.
-
-2. Install docker-compose using `sudo apt install docker-compose`.
-
-3. Add a Non-Root User to the Docker Group
-
+2. Run `systemctl start docker`
+3.  Install docker-compose using `sudo apt install docker-compose`. 
+4.  Add a Non-Root User to the Docker Group
 	By default, only users who have administrative privileges (root users) can run containers. If you are not logged in as the root, one option is to use the sudo prefix. However, you could also add your non-root user to the Docker group which will allow it to execute docker commands. The syntax for adding users to the Docker group is:
 	
 	```
@@ -37,7 +35,7 @@ Follow [this guide](https://pimylifeup.com/raspberry-pi-afp/) to setup an AFP se
 	To add the Pi user (the default user in Raspbian), use the command:
 
 	```
-	sudo usermod -aG docker Pi
+	sudo usermod -aG docker pi
 	```
 
 	You can check the version of Docker using `docker version`. For system-wide information (including the kernel version, number of containers and images, and more extended description) run `docker info`.
@@ -133,7 +131,6 @@ Save and exit nano with ctrl + x, press Y, then Enter
 	    image: felddy/foundryvtt:release
 	    hostname: my_foundry_host_1
 	    restart: "unless-stopped"
-	    network_mode: webproxy
 	    volumes:
 	      - type: bind
 		source: ./foundrydata
@@ -318,7 +315,6 @@ services:
     image: felddy/foundryvtt:release
     hostname: my_foundry_host_1
     restart: "unless-stopped"
-    network_mode: webproxy
     volumes:
       - type: bind
         source: ./foundrydata1
@@ -339,7 +335,6 @@ services:
     image: felddy/foundryvtt:release
     hostname: my_foundry_host_2
     restart: "unless-stopped"
-    network_mode: webproxy
     volumes:
       - type: bind
         source: ./foundrydata2
@@ -368,7 +363,6 @@ services:
     image: felddy/foundryvtt:release
     hostname: my_foundry_host_2
     restart: "unless-stopped"
-    network_mode: webproxy
     volumes:
       - type: bind
         source: ./foundrydata3
