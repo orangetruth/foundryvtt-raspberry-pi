@@ -155,7 +155,10 @@ Save and exit nano with ctrl + x, press Y, then Enter
 Check that your container is running using `docker container ls`, view the container logs using `docker logs foundry`. If needed you can stop the container `docker stop foundry`, remove it `docker rm foundry`, and run it again after making any necessary changes to your docker compose file `docker-compose up -d`. Alternately, `docker-compose down` will stop all containers and removes containers, networks, volumes, and images created by the previous `docker-compose up` in a single command.
 
 9. Now it's time to setup HTTPS for your domain. Create SSL certificates using Certbot. Follow the instructions [here](https://certbot.eff.org/instructions?ws=nginx&os=debianbuster).
-10. Update the nginx config file to use port 443 and the SSL certificates you created. Again, make sure to replace `your.hostname.com`: `sudo nano /etc/nginx/sites-available/your.hostname.com` and make sure the proxy_pass port number matches the published port in your docker-compose file.
+
+**NOTE**: certbot seems to now automatically do step 11 for you
+
+11. Update the nginx config file to use port 443 and the SSL certificates you created. Again, make sure to replace `your.hostname.com`: `sudo nano /etc/nginx/sites-available/your.hostname.com` and make sure the proxy_pass port number matches the published port in your docker-compose file.
 	```
 	# the filename should be "your.hostname.com"
 
@@ -277,13 +280,15 @@ do
 	SECONDS=0
 	NOW=`date '+%F_%H%M'`	
 	DEST_FILE="foundrydata$counter-backup-$NOW.tar"
-	DEST_FOLDER="/home/pi/mnt/gdrive/foundrydata$counter/"
-	rclone delete --min-age 56d $DEST_FOLDER 
+	DEST_FOLDER="/home/pi/mnt/gdrive/FoundryBackups/foundrydata$counter/"
+    	echo deleting backups older than 56 days..
+	rclone delete --min-age 56d $DEST_FOLDER --progress
+    	echo archiving..
 	$BACKUP_CMD $BACKUP_FOLDER/$DEST_FILE -P /home/pi/foundrydata$counter
 	echo compressing..
 	/bin/gzip $BACKUP_FOLDER/$DEST_FILE
 	echo copying..
-	rclone move --update --verbose --transfers 30 --checkers 8 --contimeout 60s --timeout 300s --retries 3 --drive-chunk-size 128M --low-level-retries 10 --fast-list --stats 1s $BACKUP_FOLDER/$DEST_FILE.gz gdrive:foundrydata$counter	
+	rclone move --update --verbose --transfers 30 --checkers 8 --contimeout 60s --timeout 300s --retries 3 --drive-chunk-size 128M --low-level-retries 10 --fast-list --stats 1s $BACKUP_FOLDER/$DEST_FILE.gz gdrive:FoundryBackups/foundrydata$counter	
 	echo foundrydata$counter backup completed in $SECONDS seconds
 	((counter++))
 done
